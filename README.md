@@ -1,6 +1,6 @@
 # pdfreader-python
 
-Install:
+Use tkinter / pypdf2 / pyttsx3
 
-pip install pypdf2 pyttsx3
+
 
