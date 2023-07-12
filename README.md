@@ -1,5 +1,6 @@
 # pdfreader-python
 
 Install:
-pip install pypdf2
-pip install pyttsx3
+
+pip install pypdf2 pyttsx3
+
