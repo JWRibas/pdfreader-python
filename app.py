@@ -1,50 +1,64 @@
 import PyPDF2, pyttsx3, tkinter as tk
 from tkinter import filedialog
+from PIL import Image, ImageTk
+from pdf2image.pdf2image import convert_from_path 
+
+def load_pdf():
+    global images, pdfReader
+    pdf_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    if pdf_path:
+        path = open(pdf_path, 'rb')
+        pdfReader = PyPDF2.PdfReader(path)
+        images = convert_from_path(pdf_path)
+        status_label.config(text="PDF carregado com sucesso!")
+        start_button.config(state=tk.NORMAL)
+
+
+def start_reading():
+    engine.setProperty('voice', voice_selection.get())
+    for page in range(len(pdfReader.pages)):
+        text = pdfReader.pages[page].extract_text()
+        image = ImageTk.PhotoImage(images[page])
+        canvas.create_image(0, 0, anchor=tk.NW, image=image)
+        engine.say(text)
+        engine.runAndWait()
+
+
+def stop_reading():
+    engine.stop()
 
 root = tk.Tk()
-root.withdraw()
-
-upload_file = input("Upload your file now? (y/n): ")
-
-if upload_file == 'y':
-    pdf_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
-else:
-    pdf_path = input("Enter the path to the PDF file: ")
-
-#your .pdf file
-path = open(pdf_path, 'rb')
-
-pdfReader = PyPDF2.PdfReader(path)
 
 engine = pyttsx3.init()
 
 # Get list of available voices
 voices = engine.getProperty('voices')
 
-print("Select a voice:")
-for i, voice in enumerate(voices):
-    language = voice.languages[0] if voice.languages else "Unknown"
-    print(f"{i+1}: {voice.name} ({language})")
+voice_label = tk.Label(root, text="Selecione uma voz:")
+voice_label.pack()
 
-# Get user selection
-voice_selection = int(input("Enter the number of the desired voice: ")) - 1
+voice_selection = tk.StringVar(root)
+voice_selection.set(voices[0].name)
 
-# Set selected voice
-engine.setProperty('voice', voices[voice_selection].id)
+voice_menu = tk.OptionMenu(root, voice_selection, *[voice.name for voice in voices])
+voice_menu.pack()
 
-start_reading = input("Start reading? (y) or Quit (q): ")
+load_button = tk.Button(root, text="Carregar PDF", command=load_pdf)
+load_button.pack()
 
-if start_reading == 'y':
-    for pages in range(len(pdfReader.pages)):
-        text = pdfReader.pages[pages].extract_text()
-        engine.say(text)
-        engine.runAndWait()
-        user_input = input("Press 'c' to continue or 'q' to quit: ")
-        if user_input == 'q':
-            break
-engine.stop()
+status_label = tk.Label(root, text="")
+status_label.pack()
 
+start_button = tk.Button(root, text="Iniciar leitura", command=start_reading, state=tk.DISABLED)
+start_button.pack()
 
+stop_button = tk.Button(root, text="Parar leitura", command=stop_reading)
+stop_button.pack()
+
+canvas = tk.Canvas(root, width=300, height=400)
+canvas.pack()
+
+root.mainloop()
 
 
 
